@@ -1,0 +1,58 @@
+docker build -t healthbot_mdtkafkajson:1.0.0 -f healthbot_mdtkafkajson_Dockerfile .
+docker save healthbot_mdtkafkajson:1.0.0 -o healthbot_mdtkafkajson.tar.gz
+export HB_EXTRA_MOUNT2=/var/local/healthbot/byoi/healthbot_mdtkafkajson.yaml.j2
+export HB_EXTRA_MOUNT1=/var/local/healthbot/byoi/healthbot_mdtkafkajson.tar.gz
+sudo -E ../healthbot load-plugin -i $HB_EXTRA_MOUNT1 -c $HB_EXTRA_MOUNT2
+
+
+# Verification
+
+root@paragon-master:/var/local/healthbot/byoi# ../healthbot list-plugins -l
+PLUGIN                        IMAGE
+mdtkafkajson                  healthbot_mdtkafkajson:1.0.0
+
+# configure plugin in Insights
+set healthbot ingest byoi custom-plugin mdtkafkajson plugin-name MDT-Kafka-Json
+set healthbot ingest byoi custom-plugin mdtkafkajson service-name mdtkafkajson
+set healthbot ingest byoi custom-plugin mdtkafkajson parameters brokers value 11.254.254.254:9092
+set healthbot ingest byoi custom-plugin mdtkafkajson parameters topics value telegraf
+
+# Insights Rules and Playbooks, example for standalone counter collect
+
+set healthbot topic external rule cisco-mdt-kafka keys interface_name
+set healthbot topic external rule cisco-mdt-kafka sensor cisco_resources byoi plugin name mdtkafkajson
+set healthbot topic external rule cisco-mdt-kafka field bytes_received sensor cisco_resources path bytes_received
+set healthbot topic external rule cisco-mdt-kafka field bytes_received type integer
+set healthbot topic external rule cisco-mdt-kafka field bytes_received description bytes_received
+set healthbot topic external rule cisco-mdt-kafka field bytes_sent sensor cisco_resources path bytes_sent
+set healthbot topic external rule cisco-mdt-kafka field bytes_sent type integer
+set healthbot topic external rule cisco-mdt-kafka field interface_name sensor cisco_resources path interface_name
+set healthbot topic external rule cisco-mdt-kafka field interface_name type string
+set healthbot topic external rule cisco-mdt-kafka-cpu keys node_name
+set healthbot topic external rule cisco-mdt-kafka-cpu sensor cpu byoi plugin name mdtkafkajson
+set healthbot topic external rule cisco-mdt-kafka-cpu field node_name sensor cpu path node_name
+set healthbot topic external rule cisco-mdt-kafka-cpu field node_name type string
+set healthbot topic external rule cisco-mdt-kafka-cpu field total_cpu_one_minute sensor cpu path total_cpu_one_minute
+set healthbot topic external rule cisco-mdt-kafka-cpu field total_cpu_one_minute type integer
+set healthbot topic external rule cisco-mdt-kafka-cpu field total_cpu_one_minute description total_cpu_one_minute
+set healthbot topic external rule cisco-mdt-kafka-sr-te keys sr_te_name
+set healthbot topic external rule cisco-mdt-kafka-sr-te sensor sr-te byoi plugin name mdtkafkajson
+set healthbot topic external rule cisco-mdt-kafka-sr-te field bytes sensor sr-te path stats/bytes
+set healthbot topic external rule cisco-mdt-kafka-sr-te field bytes type integer
+set healthbot topic external rule cisco-mdt-kafka-sr-te field bytes description bytes
+set healthbot topic external rule cisco-mdt-kafka-sr-te field packets sensor sr-te path stats/packets
+set healthbot topic external rule cisco-mdt-kafka-sr-te field packets type integer
+set healthbot topic external rule cisco-mdt-kafka-sr-te field sr_te_name sensor sr-te path active_lsp/candidate_path/name
+set healthbot topic external rule cisco-mdt-kafka-sr-te field sr_te_name type string
+set healthbot playbook cisco-mdt-kafka rules external/cisco-mdt-kafka
+set healthbot playbook cisco-mdt-kafka rules external/cisco-mdt-kafka-cpu
+set healthbot playbook cisco-mdt-kafka rules external/cisco-mdt-kafka-sr-te
+
+set healthbot device-group Cisco playbooks cisco-mdt-kafka
+set healthbot device-group Cisco variable ciscomdtkafka cisco-mdt-kafka external/cisco-mdt-kafka running-state running
+set healthbot device-group Cisco variable ciscomdtkafka cisco-mdt-kafka external/cisco-mdt-kafka-cpu running-state running
+set healthbot device-group Cisco variable ciscomdtkafka cisco-mdt-kafka external/cisco-mdt-kafka-sr-te running-state running
+
+
+# Insights Rules and Playbooks, example for SR-TE stats collection and injection into pathfinder
+# see insights.inject.ppf.rules
