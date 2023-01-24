@@ -1,0 +1,113 @@
+{%- set sg_name = '-' + env['SUBGROUP'] -%}
+{%- set sg_dir = '_' + env['SUBGROUP'] -%}
+{% if env['SUBGROUP'] == '' -%}
+  {%- set sg_name = '' -%}
+  {%- set sg_dir = '' -%}
+{%- endif %}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: {{ env['NAMESPACE'] }}
+  name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
+  labels:
+    app: {{ env['CUSTOM_PLUGIN_NAME'] }}
+    group-name: {{ env['GROUP_NAME'] }}
+    group-type: {{ env['GROUP_TYPE'] }}
+    subgroup: '{{ env['SUBGROUP'] }}'
+data:
+  TAND_HOST: '{{ env['GROUP_TYPE_SHORT'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}-terminus'
+  TAND_PORT: '{{env['tand:TAND_PORT']}}'
+  PUBLISHD_HOST: '{{env['publishd:PUBLISHD_HOST']}}'
+  PUBLISHD_PORT: '{{env['publishd:PUBLISHD_PORT']}}'
+  CONFIG_MANAGER_PORT: {{env['configmanager:CONFIG_MANAGER_PORT']}}
+  CHANNEL: '{{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME'] }}'
+  GODEBUG: 'madvdontneed=1'
+  IAM_SERVER: '{{ env['iam:IAM_SERVER'] }}'
+  IAM_SERVER_PORT: '{{ env['iam:IAM_SERVER_PORT'] }}'
+  IAM_SERVER_PROTOCOL: '{{ env['iam:IAM_SERVER_PROTOCOL'] }}'
+  IAM_NAMESPACE: '{{ env['iam:IAM_NAMESPACE'] }}'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ env['NAMESPACE'] }}
+  name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
+  labels:
+    app: {{ env['CUSTOM_PLUGIN_NAME'] }}
+    group-name: {{ env['GROUP_NAME'] }}
+    group-type: {{ env['GROUP_TYPE'] }}
+    subgroup: '{{ env['SUBGROUP'] }}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ env['CUSTOM_PLUGIN_NAME'] }}
+      group-name: {{ env['GROUP_NAME'] }}
+      group-type: {{ env['GROUP_TYPE'] }}
+      subgroup: '{{ env['SUBGROUP'] }}'
+  template:
+    metadata:
+      namespace: {{ env['NAMESPACE'] }}
+      labels:
+        app: {{ env['CUSTOM_PLUGIN_NAME'] }}
+        group-name: {{ env['GROUP_NAME'] }}
+        group-type: {{ env['GROUP_TYPE'] }}
+        subgroup: '{{ env['SUBGROUP'] }}'
+    spec:
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 180
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 180
+      initContainers:
+      - name: sync
+        image: {{ env['REGISTRY'] }}/{{ env['HEALTHBOT_INIT_CONTAINER_IMAGE'] }}:{{ env['HEALTHBOT_INIT_CONTAINER_TAG'] }}
+        imagePullPolicy: Always
+        command: ["python3"]
+        args: ["/root/sync_files.py", "-c", "{{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME'] }}"]
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        envFrom:
+        - configMapRef:
+            name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
+      containers:
+      - name: {{ env['CUSTOM_PLUGIN_NAME'] }}
+        image: {{ env['REGISTRY'] }}/{{ env['HEALTHBOT_MDTKAFKAJSON_IMAGE'] }}:{{ env['HEALTHBOT_MDTKAFKAJSON_TAG'] }}
+        imagePullPolicy: Always
+        # e.g.
+        # command: [<ADD_COMMAND>]
+        # args: [<ADD_ARGUMENTS>]
+        command: ["python3"]
+        args: ["/main.py"]
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        envFrom:
+        - configMapRef:
+              name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
+        volumeMounts:
+        - name: default
+          mountPath: /etc/byoi
+        - name: data-model
+          mountPath: /etc/ml
+      volumes:
+      - name: default
+        hostPath:
+          type: DirectoryOrCreate
+          path: {{ env['JFIT_OUTPUT_PATH'] }}/{{ env['GROUP_NAME'] }}{{ sg_dir }}/custom_{{ env['CUSTOM_PLUGIN_NAME'] }}_collector
+      - name: data-model
+        hostPath:
+          type: DirectoryOrCreate
+          path: {{ env['JFIT_ETC_PATH'] }}/data/models/{{ env['GROUP_NAME'] }}
+      imagePullSecrets:
+      - name: registry-secret

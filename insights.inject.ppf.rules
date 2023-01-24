@@ -1,0 +1,170 @@
+delete healthbot topic controller.telemetry rule ctrl-label-switched-path
+delete healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation
+
+set healthbot topic controller.telemetry rule ctrl-label-switched-path keys counter-name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path keys lsp-stats-name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path synopsis "SR(color and non-color) and RSVP LSP stats"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path description "This rule collects LSP stats from multiple sensors SR and RSVP. Used by the Pathfinder controller"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor rsvp-lsp native-gpb sensor-name jnpr_lsp_statistics_ext
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor rsvp-lsp native-gpb port 4000
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor sr-color-lsp native-gpb sensor-name jnpr_sr_te_ip_stats_ext
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor sr-color-lsp native-gpb port 4000
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor sr-lsp native-gpb sensor-name jnpr_sr_te_ingress_tunnel_stats_ext
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor sr-lsp native-gpb port 4000
+set healthbot topic controller.telemetry rule ctrl-label-switched-path sensor sr-lsp-mdt byoi plugin name mdtkafkajson
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id sensor rsvp-lsp path dummy_path
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id sensor rsvp-lsp data-if-missing value ""
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id sensor sr-color-lsp path te_ip_stats.color_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id sensor sr-lsp path dummy_path
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id sensor sr-lsp data-if-missing value ""
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id sensor sr-lsp-mdt path dummy_mdt
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field color-id description "LSP name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field counter-name formula concatenate strings "$lsp-stats-counter"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field counter-name formula concatenate strings -
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field counter-name formula concatenate strings "$instance-id"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field elapsed-time formula elapsed-time field-name "$lsp-stats-bytes"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field elapsed-time type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id sensor rsvp-lsp path lsp_stats_records.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id sensor sr-color-lsp path te_ip_stats.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id sensor sr-lsp path te_ingress_tunnel_stats.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id sensor sr-lsp-mdt path te_ingress_tunnel_stats.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id sensor sr-lsp-mdt data-if-missing value 0
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field instance-id description "LSP counter instance name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bps formula rate-of-change field-name "$lsp-stats-bytes"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bps formula rate-of-change multiplication-factor 8
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bps type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bytes sensor rsvp-lsp path lsp_stats_records.bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bytes sensor sr-color-lsp path te_ip_stats.stats.bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bytes sensor sr-lsp path te_ingress_tunnel_stats.stats.bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bytes sensor sr-lsp-mdt path stats/bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-bytes type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-counter sensor rsvp-lsp path lsp_stats_records.counter_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-counter sensor sr-color-lsp path te_ip_stats.counter_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-counter sensor sr-lsp path te_ingress_tunnel_stats.counter_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-counter sensor sr-lsp-mdt path active_lsp/candidate_path/discriminator
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-counter type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-name formula concatenate strings "$to-ip"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-name formula concatenate strings "$color-id"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-packets sensor rsvp-lsp path lsp_stats_records.packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-packets sensor sr-color-lsp path te_ip_stats.stats.packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-packets sensor sr-lsp path te_ingress_tunnel_stats.stats.packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-packets sensor sr-lsp-mdt path stats/packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-packets type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-pps formula rate-of-change field-name "$lsp-stats-packets"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field lsp-stats-pps type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field stats_received_count formula count field-name "$lsp-stats-name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field stats_received_count formula count time-range 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field stats_received_count type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor rsvp-lsp where "$lsp-stats-bps >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor rsvp-lsp path lsp_stats_records.name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor sr-color-lsp where "$lsp-stats-bps >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor sr-color-lsp path te_ip_stats.to_ip_prefix
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor sr-lsp where "$lsp-stats-bps >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor sr-lsp path te_ingress_tunnel_stats.tunnel_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor sr-lsp-mdt where "$lsp-stats-bps >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip sensor sr-lsp-mdt path active_lsp/candidate_path/name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path field to-ip description "LSP name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection frequency 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection term no-lsp-stats-received when less-than-or-equal-to "$stats_received_count" 0 time-range 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection term no-lsp-stats-received then status color red
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection term no-lsp-stats-received then status message "Pathfinder rule based LSP traffic statistics not received in the last 60 seconds"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection term lsp-stats-received when greater-than-or-equal-to "$stats_received_count" 1 time-range 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection term lsp-stats-received then status color green
+set healthbot topic controller.telemetry rule ctrl-label-switched-path trigger lsp-stats-collection term lsp-stats-received then status message "Pathfinder rule based LSP traffic statistics received in the last 60 seconds"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties version 1
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties contributor juniper
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties supported-healthbot-version 4.0.0
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties supported-devices sensors rsvp-lsp
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties supported-devices sensors sr-color-lsp
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties supported-devices sensors sr-lsp
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties supported-devices other-vendor cisco vendor-name cisco
+set healthbot topic controller.telemetry rule ctrl-label-switched-path rule-properties supported-devices other-vendor cisco sensors sr-lsp-mdt
+
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation keys to-ip
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation synopsis "SR(color and non-color) and RSVP LSP aggregation rule"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation description "This rule aggregates LSP stats based on lsp name as used by the Pathfinder controller"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field-aggregation-time-range 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor rsvp-lsp native-gpb sensor-name jnpr_lsp_statistics_ext
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor rsvp-lsp native-gpb port 4000
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor sr-color-lsp native-gpb sensor-name jnpr_sr_te_ip_stats_ext
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor sr-color-lsp native-gpb port 4000
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor sr-lsp native-gpb sensor-name jnpr_sr_te_ingress_tunnel_stats_ext
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor sr-lsp native-gpb port 4000
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation sensor sr-lsp-mdt byoi plugin name mdtkafkajson
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id sensor rsvp-lsp path dummy_path
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id sensor rsvp-lsp data-if-missing value ""
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id sensor sr-color-lsp path te_ip_stats.color_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id sensor sr-lsp path dummy_path
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id sensor sr-lsp data-if-missing value ""
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id sensor sr-lsp-mdt path dummy_path
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field color-id description "LSP name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-bytes formula value-difference field-name "$lsp-stats-bytes"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-bytes formula value-difference extra-keys instance-id
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-bytes formula value-difference extra-keys lsp-stats-counter
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-bytes type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-packets formula value-difference field-name "$lsp-stats-packets"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-packets formula value-difference extra-keys instance-id
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-packets formula value-difference extra-keys lsp-stats-counter
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field delta-packets type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field elapsed-time formula elapsed-time field-name "$total-delta-bytes"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field elapsed-time type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id sensor rsvp-lsp path lsp_stats_records.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id sensor sr-color-lsp path te_ip_stats.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id sensor sr-lsp path te_ingress_tunnel_stats.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id sensor sr-lsp-mdt path te_ingress_tunnel_stats.instance_identifier
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id sensor sr-lsp-mdt data-if-missing value 0
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field instance-id description "LSP counter instance name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bps formula eval expression "( $total-delta-bytes / 60 ) * 8"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bps type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bytes sensor rsvp-lsp path lsp_stats_records.bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bytes sensor sr-color-lsp path te_ip_stats.stats.bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bytes sensor sr-lsp path te_ingress_tunnel_stats.stats.bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bytes sensor sr-lsp-mdt path stats/bytes
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-bytes type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-counter sensor rsvp-lsp path lsp_stats_records.counter_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-counter sensor sr-color-lsp path te_ip_stats.counter_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-counter sensor sr-lsp path te_ingress_tunnel_stats.counter_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-counter sensor sr-lsp-mdt path active_lsp/candidate_path/discriminator
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-counter type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-name formula concatenate strings "$to-ip"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-name formula concatenate strings "$color-id"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-name type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-packets sensor rsvp-lsp path lsp_stats_records.packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-packets sensor sr-color-lsp path te_ip_stats.stats.packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-packets sensor sr-lsp path te_ingress_tunnel_stats.stats.packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-packets sensor sr-lsp-mdt path stats/packets
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-packets type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-pps formula eval expression "( $total-delta-packets / 60 )"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field lsp-stats-pps type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field stats_received_count formula count field-name "$lsp-stats-bytes"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field stats_received_count formula count time-range 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field stats_received_count type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor rsvp-lsp where "$delta-bytes >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor rsvp-lsp path lsp_stats_records.name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor sr-color-lsp where "$delta-bytes >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor sr-color-lsp path te_ip_stats.to_ip_prefix
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor sr-lsp where "$delta-bytes >= 0"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor sr-lsp path te_ingress_tunnel_stats.tunnel_name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip sensor sr-lsp-mdt path active_lsp/candidate_path/name
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip type string
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field to-ip description "LSP name"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field total-delta-bytes formula sum field-name "$delta-bytes"
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field total-delta-packets formula sum time-range 60s
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation field total-delta-packets type integer
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties version 1
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties contributor juniper
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties supported-healthbot-version 4.0.0
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties supported-devices juniper sensors rsvp-lsp
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties supported-devices juniper sensors sr-color-lsp
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties supported-devices juniper sensors sr-lsp
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties supported-devices other-vendor cisco vendor-name cisco
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation rule-properties supported-devices other-vendor cisco sensors sr-lsp-mdt
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation redirect-to name controller.telemetry/ctrl-label-switched-path-aggregation
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation redirect-to mandatory-fields lsp-stats-bps
+set healthbot topic controller.telemetry rule ctrl-label-switched-path-aggregation redirect-to mandatory-fields lsp-stats-pps
+
